@@ -22,8 +22,6 @@ from .handler import Handler
 class ErrorHandler(Handler):
     """The Exception handler class. Used to handle error in handlers.
     It is intended to be used with :meth:`~pyrogram.Client.add_handler`
-    For a nicer way to register this handler, have a look at the
-    :meth:`~pyrogram.Client.on_error` decorator.
     Parameters:
         callback (``callable``):
             Pass a function that will be called when a new Exception arrives. It takes *(client, error)*
@@ -34,6 +32,10 @@ class ErrorHandler(Handler):
         error (:obj:`Exception`):
             The received error.
     """
+
+    # TODO ⬇️
+    """For a nicer way to register this handler, have a look at the
+    :meth:`~pyrogram.Client.on_error` decorator."""
 
     def __init__(self, callback: callable, filters=None):
         super().__init__(callback, filters)
