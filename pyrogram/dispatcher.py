@@ -26,7 +26,8 @@ from pyrogram import utils
 from pyrogram.handlers import (
     CallbackQueryHandler, MessageHandler, DeletedMessagesHandler,
     UserStatusHandler, RawUpdateHandler, InlineQueryHandler, PollHandler,
-    ChosenInlineResultHandler, ChatMemberUpdatedHandler, ChatJoinRequestHandler
+    ChosenInlineResultHandler, ChatMemberUpdatedHandler, ChatJoinRequestHandler,
+    ErrorHandler
 )
 from pyrogram.raw.types import (
     UpdateNewMessage, UpdateNewChannelMessage, UpdateNewScheduledMessage,
@@ -79,6 +80,9 @@ class Dispatcher:
 
         self.updates_queue = asyncio.Queue()
         self.groups = OrderedDict()
+        
+        self.error_handler = None
+        self.error_handler_coro = None
 
         async def message_parser(update, users, chats):
             return await pyrogram.types.Message._parse(
@@ -157,7 +161,10 @@ class Dispatcher:
                 if group not in self.groups:
                     self.groups[group] = []
                     self.groups = OrderedDict(sorted(self.groups.items()))
-
+                
+                if isinstance(handler, ErrorHandler):
+                    self.error_handler = handler
+                    self.error_handler_coro = inspect.iscoroutinefunction(handler.callback)
                 self.groups[group].append(handler)
             finally:
                 for lock in self.locks_list:
@@ -232,7 +239,18 @@ class Dispatcher:
                             except pyrogram.ContinuePropagation:
                                 continue
                             except Exception as e:
-                                log.error(e, exc_info=True)
+                                if self.error_handler:
+                                    if self.error_handler_coro:
+                                        await self.error_handler.callback(self.client, e)
+                                    else:
+                                        await self.loop.run_in_executor(
+                                            self.client.executor,
+                                            self.error_handler.callback,
+                                            self.client,
+                                            e
+                                        )
+                                else:
+                                    log.error(e, exc_info=True)
 
                             break
             except pyrogram.StopPropagation:
