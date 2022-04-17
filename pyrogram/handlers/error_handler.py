@@ -31,7 +31,7 @@ class ErrorHandler(Handler):
             Pass a function that will be called when a new Exception arrives. It takes *(client, error)*
             as positional arguments (look at the section below for a detailed description).
         errors (``Exception``, "Tuple[``Exception``]"):
-            Pass a error class(es) which the handler will react to.
+            Pass a error class(es) which the handler will react to. Dont use if global.
     Other parameters:
         client (:obj:`~pyrogram.Client`):
             The Client itself, useful when you want to call other API methods inside the message handler.
@@ -43,7 +43,7 @@ class ErrorHandler(Handler):
     """For a nicer way to register this handler, have a look at the
     :meth:`~pyrogram.Client.on_error` decorator."""
 
-    def __init__(self, callback: Callable, errors=None):
+    def __init__(self, callback: Callable, errors=Exception):
         self.callback = callback
         self.errors = tuple(errors) if isinstance(errors, (tuple, list)) else (errors,)
     
