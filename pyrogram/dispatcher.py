@@ -80,9 +80,9 @@ class Dispatcher:
 
         self.updates_queue = asyncio.Queue()
         self.groups = OrderedDict()
-        
-        self.error_handler = None
-        self.error_handler_coro = None
+
+        self.error_handlers = []
+        self.error_handler_coros = []
 
         async def message_parser(update, users, chats):
             return await pyrogram.types.Message._parse(
@@ -161,10 +161,10 @@ class Dispatcher:
                 if group not in self.groups:
                     self.groups[group] = []
                     self.groups = OrderedDict(sorted(self.groups.items()))
-                
+
                 if isinstance(handler, ErrorHandler):
-                    self.error_handler = handler
-                    self.error_handler_coro = inspect.iscoroutinefunction(handler.callback)
+                    self.error_handlers.append(handler)
+                    self.error_handler_coros.append(inspect.iscoroutinefunction(handler.callback))
                 self.groups[group].append(handler)
             finally:
                 for lock in self.locks_list:
@@ -239,17 +239,27 @@ class Dispatcher:
                             except pyrogram.ContinuePropagation:
                                 continue
                             except Exception as e:
-                                if self.error_handler:
-                                    if self.error_handler_coro:
-                                        await self.error_handler.callback(self.client, e, *args)
-                                    else:
-                                        await self.loop.run_in_executor(
-                                            self.client.executor,
-                                            self.error_handler.callback,
-                                            self.client,
-                                            e,
-                                            *args
-                                        )
+                                if self.error_handlers:
+                                    executed = False
+                                    for error_handler in self.error_handlers:
+                                        if isinstance(e, error_handler.errors):
+                                            executed = True
+                                            error_handler_coro = self.error_handler_coros[
+                                                self.error_handlers.index(error_handler)
+                                            ]
+                                            if error_handler_coro:
+                                                await error_handler.callback(self.client, e, *args)
+                                            else:
+                                                await self.loop.run_in_executor(
+                                                    self.client.executor,
+                                                    error_handler.callback,
+                                                    self.client,
+                                                    e,
+                                                    *args
+                                                )
+                                            continue
+                                    if not executed:
+                                        log.error(e, exc_info=True)
                                 else:
                                     log.error(e, exc_info=True)
 
