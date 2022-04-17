@@ -241,13 +241,14 @@ class Dispatcher:
                             except Exception as e:
                                 if self.error_handler:
                                     if self.error_handler_coro:
-                                        await self.error_handler.callback(self.client, e)
+                                        await self.error_handler.callback(self.client, e, *args)
                                     else:
                                         await self.loop.run_in_executor(
                                             self.client.executor,
                                             self.error_handler.callback,
                                             self.client,
-                                            e
+                                            e,
+                                            *args
                                         )
                                 else:
                                     log.error(e, exc_info=True)
