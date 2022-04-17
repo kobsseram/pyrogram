@@ -17,6 +17,10 @@
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from .handler import Handler
+from typing import Callable
+
+import pyrogram
+from pyrogram.types import Update
 
 
 class ErrorHandler(Handler):
@@ -26,6 +30,8 @@ class ErrorHandler(Handler):
         callback (``callable``):
             Pass a function that will be called when a new Exception arrives. It takes *(client, error)*
             as positional arguments (look at the section below for a detailed description).
+        errors (``Exception``, "Tuple[``Exception``]"):
+            Pass a error class(es) which the handler will react to.
     Other parameters:
         client (:obj:`~pyrogram.Client`):
             The Client itself, useful when you want to call other API methods inside the message handler.
@@ -37,5 +43,9 @@ class ErrorHandler(Handler):
     """For a nicer way to register this handler, have a look at the
     :meth:`~pyrogram.Client.on_error` decorator."""
 
-    def __init__(self, callback: callable, filters=None):
-        super().__init__(callback, filters)
+    def __init__(self, callback: Callable, errors=None):
+        self.callback = callback
+        self.errors = tuple(errors) if isinstance(errors, (tuple, list)) else (errors,)
+    
+    async def check(self, client: "pyrogram.Client", update: Update):
+        return True
