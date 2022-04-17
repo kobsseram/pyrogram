@@ -43,9 +43,9 @@ class ErrorHandler(Handler):
     """For a nicer way to register this handler, have a look at the
     :meth:`~pyrogram.Client.on_error` decorator."""
 
-    def __init__(self, callback: Callable, errors=Exception):
+    def __init__(self, callback: Callable, errors=None):
         self.callback = callback
-        self.errors = tuple(errors) if isinstance(errors, (tuple, list)) else (errors,)
+        self.errors = tuple(errors) if isinstance(errors, list) else errors
     
     async def check(self, client: "pyrogram.Client", update: Update):
         return True
