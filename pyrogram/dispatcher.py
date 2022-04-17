@@ -83,6 +83,8 @@ class Dispatcher:
 
         self.error_handlers = []
         self.error_handler_coros = []
+        self.global_error_handler = None
+        self.glboal_error_handler_coro = None
 
         async def message_parser(update, users, chats):
             return await pyrogram.types.Message._parse(
@@ -163,8 +165,12 @@ class Dispatcher:
                     self.groups = OrderedDict(sorted(self.groups.items()))
 
                 if isinstance(handler, ErrorHandler):
-                    self.error_handlers.append(handler)
-                    self.error_handler_coros.append(inspect.iscoroutinefunction(handler.callback))
+                    if handler.errors is None:
+                        self.global_error_handler = handler
+                        self.global_error_handler_coro = inspect.iscoroutinefunction(handler.callback)
+                    else:
+                        self.error_handlers.append(handler)
+                        self.error_handler_coros.append(inspect.iscoroutinefunction(handler.callback))
                 self.groups[group].append(handler)
             finally:
                 for lock in self.locks_list:
@@ -260,6 +266,17 @@ class Dispatcher:
                                             continue
                                     if not executed:
                                         log.error(e, exc_info=True)
+                                elif self.global_error_handler:
+                                    if self.global_error_handler_coro:
+                                        await self.global_error_handler.callback(self.client, e, *args)
+                                    else:
+                                        await self.loop.run_in_executor(
+                                            self.client.executor,
+                                            self.global_error_handler.callback,
+                                            self.client,
+                                            e,
+                                            *args
+                                        )
                                 else:
                                     log.error(e, exc_info=True)
 
