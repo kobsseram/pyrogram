@@ -84,7 +84,7 @@ class Dispatcher:
         self.error_handlers = []
         self.error_handler_coros = []
         self.global_error_handler = None
-        self.glboal_error_handler_coro = None
+        self.global_error_handler_coro = None
 
         async def message_parser(update, users, chats):
             return await pyrogram.types.Message._parse(
@@ -264,9 +264,7 @@ class Dispatcher:
                                                     *args
                                                 )
                                             continue
-                                    if not executed:
-                                        log.error(e, exc_info=True)
-                                elif self.global_error_handler:
+                                if not executed or self.global_error_handler:
                                     if self.global_error_handler_coro:
                                         await self.global_error_handler.callback(self.client, e, *args)
                                     else:
