@@ -245,8 +245,8 @@ class Dispatcher:
                             except pyrogram.ContinuePropagation:
                                 continue
                             except Exception as e:
+                                executed = False
                                 if self.error_handlers:
-                                    executed = False
                                     for error_handler in self.error_handlers:
                                         if isinstance(e, error_handler.errors):
                                             executed = True
