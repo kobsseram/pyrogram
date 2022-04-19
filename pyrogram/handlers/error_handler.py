@@ -37,11 +37,9 @@ class ErrorHandler(Handler):
             The Client itself, useful when you want to call other API methods inside the message handler.
         error (:obj:`Exception`):
             The received error.
+    For a nicer way to register this handler, have a look at the
+    :meth:`~pyrogram.Client.on_error` decorator.
     """
-
-    # TODO ⬇️
-    """For a nicer way to register this handler, have a look at the
-    :meth:`~pyrogram.Client.on_error` decorator."""
 
     def __init__(self, callback: Callable, errors=None):
         self.callback = callback
