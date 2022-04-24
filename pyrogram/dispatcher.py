@@ -195,6 +195,36 @@ class Dispatcher:
                     lock.release()
 
         self.loop.create_task(fn())
+        
+    def remove_error_handler(self, handler: ErrorHandler = None, error: Exception = None):
+        """
+        Use **handler** argument if you have handler obj
+        else Use **error** argument if you have error obj
+        else Don't use arguments if you want to delete global error handler
+        """
+        async def fn():
+            for lock in self.locks_list:
+                await lock.acquire()
+
+            try:
+                if handler:
+                    index = self.error_handlers.index(handler)
+                    self.error_handlers.pop(index)
+                    self.error_handlers_coros.pop(index)
+                elif error:
+                    for index, err in enumerate(self.error_handlers):
+                        if error in err.errors:
+                            self.error_handlers.pop(index)
+                            self.error_handlers_coro.pop(index)
+                else:
+                    self.global_error_handler = None
+                    self.global_error_handler_coro = None
+            finally:
+                for lock in self.locks_list:
+                    lock.release()
+
+        self.loop.create_task(fn())
+        
 
     def remove_handler(self, handler, group: int):
         async def fn():
