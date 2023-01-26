@@ -28,10 +28,12 @@ from .on_message import OnMessage
 from .on_poll import OnPoll
 from .on_raw_update import OnRawUpdate
 from .on_user_status import OnUserStatus
+from .on_error import OnError
 
 
 class Decorators(
     OnMessage,
+    OnError,
     OnEditedMessage,
     OnDeletedMessages,
     OnCallbackQuery,
