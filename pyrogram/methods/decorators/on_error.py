@@ -19,7 +19,7 @@
 from typing import Callable
 
 import pyrogram
-from pyrogram.scaffold import Scaffold
+# from pyrogram.scaffold import Scaffold
 
 
 class OnError(Scaffold):
