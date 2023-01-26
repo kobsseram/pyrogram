@@ -19,10 +19,9 @@
 from typing import Callable
 
 import pyrogram
-# from pyrogram.scaffold import Scaffold
 
 
-class OnError(Scaffold):
+class OnError:
     def on_error(
         self=None,
         errors=None
